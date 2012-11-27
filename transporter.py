@@ -11,19 +11,16 @@ def loadJSON(file_name):
         jsonDoc = json.load(fd)
         return jsonDoc
 
-
 documents = loadJSON("buckets.json")
+
 # Get a connection to mongod.
-connection = Connection()
+with Connection() as connection:
+    # Lazy create a database in mongo called 'brovine-testdb'.
+    db = connection['brovine-testdb']
 
-# Lazy create a database in mongo called 'brovine-testdb'.
-db = connection['brovine-testdb']
+    # Create a collection (aka. table) in the brovine db called 'genes2'.
+    for genebucket in documents:
+        print "Inserting %s into 'genes2' collection." % genebucket['geneid']
 
-# Create a collection (aka. table) in the brovine db called 'genes'.
-genes = db.genes2
-
-for genebucket in documents:
-    print "Inserting %s into 'gene' collection." % genebucket['geneid']
-    genes.insert(genebucket)
-
-connection.close()
+        # PyMongo does lazy collection creation, so genes collection is created on first insert.
+        db.genes2.insert(genebucket)
