@@ -12,7 +12,7 @@ def loadJSON(file_name):
         return jsonDoc
 
 
-documents = loadJSON("gene_data.json")
+documents = loadJSON("buckets.json")
 # Get a connection to mongod.
 connection = Connection()
 
@@ -20,10 +20,10 @@ connection = Connection()
 db = connection['brovine-testdb']
 
 # Create a collection (aka. table) in the brovine db called 'genes'.
-genes = db.genes
+genes = db.genes2
 
 for genebucket in documents:
-    print "Inserting %s into 'gene' collection." % genebucket['genename']
+    print "Inserting %s into 'gene' collection." % genebucket['geneid']
     genes.insert(genebucket)
 
 connection.close()

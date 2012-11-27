@@ -3,8 +3,8 @@ from bson.code import Code
 import itertools
 
 
-minimum_bucket_occurences = 37  # sets the minimum number of buckets that a set of items must occur in.
-maximum_bucked_occurences = 45
+minimum_bucket_occurences = 120  # sets the minimum number of buckets that a set of items must occur in.
+maximum_bucked_occurences = 148  # sets the maximum number of buckets that a set of items must occur in.
 
 mapFunc = Code("""
                 function () {
@@ -25,7 +25,11 @@ mapFunc = Code("""
 
 reduceFunc = Code("""
                 function (key, values) {
-                  return values.length;
+                  total = 0
+                  values.forEach(function(value){
+                    total += value
+                  });
+                  return total;
                 }
                 """)
 
@@ -38,7 +42,7 @@ def joinSets(inSet, inList):
 
 def getInitialCandidates(db):
     query = {}
-    results = db.genes.find(query)
+    results = db.genes2.find(query)
 
     # Get all the buckets together.
     all_buckets = []
@@ -67,12 +71,13 @@ def getInitialCandidates(db):
 def getNextCandidates(db, candidates):
     # Given the initial candidates, MapReduce to find counts for each occurence.
     db.tempCandidates.drop()
-    db.genes.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
+    db.genes2.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
 
     # Take the results and create the next candidate set.
     reducedResults = db.tempCandidates.find({"value": {"$gt": minimum_bucket_occurences, "$lt": maximum_bucked_occurences}})
 
-    cleanReduceResults = [[int(key) for key in result["_id"].split(",")] for result in reducedResults]
+    # cleanReduceResults = [[int(key) for key in result["_id"].split(",")] for result in reducedResults]
+    cleanReduceResults = [result["_id"].split(",") for result in reducedResults]
 
     next_candidates = []
     for index, rs in enumerate(cleanReduceResults):
@@ -83,14 +88,14 @@ def getNextCandidates(db, candidates):
 
 with Connection() as connection:
     db = connection['brovine-testdb']
-    genes = db['genes']
 
     initial_candidates = getInitialCandidates(db)
+    print "initial candidates", len(initial_candidates)
 
     nextCandidates = getNextCandidates(db, initial_candidates)
     while len(nextCandidates) != 1:
         print "Iteration."
+        print len(nextCandidates)
         nextCandidates = getNextCandidates(db, nextCandidates)
 
     print nextCandidates
-
