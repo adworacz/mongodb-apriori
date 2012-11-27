@@ -3,7 +3,7 @@ from bson.code import Code
 import itertools
 
 
-minimum_bucket_occurences = 120  # sets the minimum number of buckets that a set of items must occur in.
+minimum_bucket_occurences = 130  # sets the minimum number of buckets that a set of items must occur in.
 maximum_bucked_occurences = 148  # sets the maximum number of buckets that a set of items must occur in.
 
 mapFunc = Code("""
@@ -54,7 +54,7 @@ def joinSets(inSet, inList):
 
 def getInitialCandidates(db):
     # Get all the documents.
-    results = db.genes2.find()
+    results = db.genes.find()
 
     # Get all the buckets together.
     allBuckets = [result["basket"] for result in results]
@@ -81,7 +81,7 @@ def getInitialCandidates(db):
 def getNextCandidates(db, candidates):
     # Given the initial candidates, MapReduce to find counts for each occurence.
     db.tempCandidates.drop()
-    db.genes2.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
+    db.genes.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
 
     # Take the results and create the next candidate set.
     reducedResults = db.tempCandidates.find({"value": {"$gt": minimum_bucket_occurences, "$lt": maximum_bucked_occurences}})
@@ -103,9 +103,13 @@ with Connection() as connection:
     print "initial candidates", len(initialCandidates)
 
     nextCandidates = getNextCandidates(db, initialCandidates)
-    while len(nextCandidates) != 1:
-        print "Iteration."
-        print len(nextCandidates)
+
+    finalCandidates = []
+    while len(nextCandidates) > 0:
+        print "Running with %d possible candidates." % len(nextCandidates)
         nextCandidates = getNextCandidates(db, nextCandidates)
 
-    print nextCandidates
+        if len(nextCandidates) > 0:
+            finalCandidates = nextCandidates
+
+    print finalCandidates
