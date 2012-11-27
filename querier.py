@@ -41,31 +41,29 @@ def joinSets(inSet, inList):
 
 
 def getInitialCandidates(db):
-    query = {}
-    results = db.genes2.find(query)
+    # Get all the documents.
+    results = db.genes2.find()
 
     # Get all the buckets together.
-    all_buckets = []
-    for result in results:
-        all_buckets.append(result["basket"])
+    allBuckets = [result["basket"] for result in results]
 
     # Get all the unique items out of all of the buckets.
-    all_items = [item for bucket in all_buckets for item in bucket]
-    unique_items = set(all_items)
+    allItems = [item for bucket in allBuckets for item in bucket]
+    uniqueItems = set(allItems)
 
     # Get the first set of items that occur more than minimum_bucket_occurences.
-    inital_candidates = []
-    for item in unique_items:
-        occurences = all_items.count(item)
+    initialCandidates = []
+    for item in uniqueItems:
+        occurences = allItems.count(item)
 
         if occurences > minimum_bucket_occurences and occurences < maximum_bucked_occurences:
-            inital_candidates.append(item)
+            initialCandidates.append(item)
 
     # Get initial combinations
-    combinations = itertools.combinations(sorted(inital_candidates), 2)
-    initial_candidates = [list(combo) for combo in combinations]
+    combinations = itertools.combinations(sorted(initialCandidates), 2)
+    initialCandidates = [list(combo) for combo in combinations]
 
-    return initial_candidates
+    return initialCandidates
 
 
 def getNextCandidates(db, candidates):
@@ -79,20 +77,20 @@ def getNextCandidates(db, candidates):
     # cleanReduceResults = [[int(key) for key in result["_id"].split(",")] for result in reducedResults]
     cleanReduceResults = [result["_id"].split(",") for result in reducedResults]
 
-    next_candidates = []
+    nextCandidates = []
     for index, rs in enumerate(cleanReduceResults):
-        next_candidates.extend(list(joinSets(rs, cleanReduceResults[index + 1:])))
+        nextCandidates.extend(list(joinSets(rs, cleanReduceResults[index + 1:])))
 
-    return next_candidates
+    return nextCandidates
 
 
 with Connection() as connection:
     db = connection['brovine-testdb']
 
-    initial_candidates = getInitialCandidates(db)
-    print "initial candidates", len(initial_candidates)
+    initialCandidates = getInitialCandidates(db)
+    print "initial candidates", len(initialCandidates)
 
-    nextCandidates = getNextCandidates(db, initial_candidates)
+    nextCandidates = getNextCandidates(db, initialCandidates)
     while len(nextCandidates) != 1:
         print "Iteration."
         print len(nextCandidates)
