@@ -35,6 +35,18 @@ reduceFunc = Code("""
 
 
 def joinSets(inSet, inList):
+    """If the provided list matches the first n-1 elements of
+    another element in the provided list of lists, yield their combination.
+
+    Ex:
+    inSet = [1, 2, 3]
+    inList = [[1, 2, 5], [...], ...]
+
+    Since the first 2 (note: n - 1) elements of [1, 2, 3] and [1, 2, 5] match,
+    return the resulting joint list.
+
+    result = [1, 2, 3, 5]
+    """
     for element in inList:
         if inSet[:-1] == element[:-1]:
             yield inSet + [element[-1]]
