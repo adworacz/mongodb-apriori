@@ -6,6 +6,8 @@ import itertools
 minimum_bucket_occurences = 130  # sets the minimum number of buckets that a set of items must occur in.
 maximum_bucked_occurences = 148  # sets the maximum number of buckets that a set of items must occur in.
 
+totalResults = []
+
 # It's important to note that this Map function relies on the basket data being sorted.
 mapFunc = Code("""
                 function () {
@@ -72,6 +74,9 @@ def getInitialCandidates(db):
         if occurences > minimum_bucket_occurences and occurences < maximum_bucked_occurences:
             initialCandidates.append(item)
 
+    # Add significant 1-set candidates to totalResults.
+    totalResults.extend(initialCandidates)
+
     # Get initial combinations
     combinations = itertools.combinations(sorted(initialCandidates), 2)
     initialCandidates = [list(combo) for combo in combinations]
@@ -81,7 +86,6 @@ def getInitialCandidates(db):
 
 def getNextCandidates(db, candidates):
     # Given the initial candidates, MapReduce to find counts for each occurence.
-    db.tempCandidates.drop()
     db.genes.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
 
     # Take the results and create the next candidate set.
@@ -89,6 +93,9 @@ def getNextCandidates(db, candidates):
 
     # cleanReduceResults = [[int(key) for key in result["_id"].split(",")] for result in reducedResults]
     cleanReduceResults = [result["_id"].split(",") for result in reducedResults]
+
+    # Add these results to totalResults
+    totalResults.extend(cleanReduceResults)
 
     nextCandidates = []
     for index, rs in enumerate(cleanReduceResults):
@@ -114,3 +121,4 @@ with Connection() as connection:
             finalCandidates = nextCandidates
 
     print finalCandidates
+    print totalResults
