@@ -6,6 +6,7 @@ import itertools
 minimum_bucket_occurences = 130  # sets the minimum number of buckets that a set of items must occur in.
 maximum_bucked_occurences = 148  # sets the maximum number of buckets that a set of items must occur in.
 
+# It's important to note that this Map function relies on the basket data being sorted.
 mapFunc = Code("""
                 function () {
                     var idx = 0;
