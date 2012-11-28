@@ -15,4 +15,4 @@ Run the map/reduce querys to determine significant items using the querier.py.
 
 `$ python querier.py`
 
-Written (hastily, don't judge me) by: Austin Dworaczyk Wiltshire
+*Written (hastily, don't judge me) by: Austin Dworaczyk Wiltshire*
