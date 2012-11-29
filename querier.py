@@ -1,4 +1,4 @@
-from pymongo import Connection
+from pymongo import MongoClient
 from bson.code import Code
 import itertools
 
@@ -104,8 +104,8 @@ def getNextCandidates(db, candidates):
     return nextCandidates
 
 
-with Connection() as connection:
-    db = connection['brovine-testdb']
+with MongoClient() as client:
+    db = client['brovine-testdb']
 
     initialCandidates = getInitialCandidates(db)
     print "initial candidates", len(initialCandidates)

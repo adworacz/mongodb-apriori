@@ -2,7 +2,7 @@
 
 Reads in data from json and stores it into a mongodb instance."""
 import json
-from pymongo import Connection
+from pymongo import MongoClient
 
 
 # Load file for parsing.
@@ -14,9 +14,9 @@ def loadJSON(file_name):
 documents = loadJSON("buckets_sorted.json")
 
 # Get a connection to mongod.
-with Connection() as connection:
+with MongoClient() as client:
     # Lazy create a database in mongo called 'brovine-testdb'.
-    db = connection['brovine-testdb']
+    db = client['brovine-testdb']
 
     # Create a collection (aka. table) in the brovine db called 'genes'.
     for genebucket in documents:
