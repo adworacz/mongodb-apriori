@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from bson.code import Code
 import itertools
-
+import json
 
 minimum_percentage = 0.835
 maximum_percentage = 0.95
@@ -58,7 +58,7 @@ def joinSets(inSet, inList):
             yield inSet + [element[-1]]
 
 
-def getInitialCandidates(db):
+def getInitialCandidates(db, uniquesFilename=None):
     # Get all the documents.
     results = db.genes.find()
 
@@ -74,7 +74,12 @@ def getInitialCandidates(db):
 
     # Get all the unique items out of all of the buckets.
     allItems = [item for bucket in allBuckets for item in bucket]
-    uniqueItems = set(allItems)
+
+    if(uniquesFilename is None):
+        uniqueItems = set(allItems)
+    else:
+        with open(uniquesFilename) as uniques:
+            uniqueItems = json.load(uniques)
 
     # Get the first set of items that occur more than minimum_bucket_occurences.
     initialCandidates = []
@@ -117,7 +122,7 @@ def getNextCandidates(db, candidates):
 with MongoClient() as client:
     db = client['brovine-testdb']
 
-    initialCandidates = getInitialCandidates(db)
+    initialCandidates = getInitialCandidates(db, "uniques.json")
     print "initial candidates", len(initialCandidates)
 
     nextCandidates = getNextCandidates(db, initialCandidates)
