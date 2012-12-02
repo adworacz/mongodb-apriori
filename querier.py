@@ -3,8 +3,11 @@ from bson.code import Code
 import itertools
 
 
-minimum_bucket_occurences = 130  # sets the minimum number of buckets that a set of items must occur in.
-maximum_bucked_occurences = 148  # sets the maximum number of buckets that a set of items must occur in.
+minimum_percentage = 0.835
+maximum_percentage = 0.95
+
+minimum_bucket_occurences = 0  # sets the minimum number of buckets that a set of items must occur in.
+maximum_bucket_occurences = 0  # sets the maximum number of buckets that a set of items must occur in.
 
 totalResults = []
 
@@ -59,6 +62,13 @@ def getInitialCandidates(db):
     # Get all the documents.
     results = db.genes.find()
 
+    #Set our Max and Min occurences based on a global percentage.
+    global minimum_bucket_occurences
+    global maximum_bucket_occurences
+
+    minimum_bucket_occurences = int(results.count() * minimum_percentage)
+    maximum_bucket_occurences = int(results.count() * maximum_percentage)
+
     # Get all the buckets together.
     allBuckets = [result["basket"] for result in results]
 
@@ -71,7 +81,7 @@ def getInitialCandidates(db):
     for item in uniqueItems:
         occurences = allItems.count(item)
 
-        if occurences > minimum_bucket_occurences and occurences < maximum_bucked_occurences:
+        if occurences >= minimum_bucket_occurences and occurences <= maximum_bucket_occurences:
             initialCandidates.append(item)
 
     # Add significant 1-set candidates to totalResults.
@@ -89,7 +99,7 @@ def getNextCandidates(db, candidates):
     db.genes.map_reduce(mapFunc, reduceFunc, "tempCandidates", scope={'candidates': candidates})
 
     # Take the results and create the next candidate set.
-    reducedResults = db.tempCandidates.find({"value": {"$gt": minimum_bucket_occurences, "$lt": maximum_bucked_occurences}})
+    reducedResults = db.tempCandidates.find({"value": {"$gte": minimum_bucket_occurences, "$lte": maximum_bucket_occurences}})
 
     # cleanReduceResults = [[int(key) for key in result["_id"].split(",")] for result in reducedResults]
     cleanReduceResults = [result["_id"].split(",") for result in reducedResults]
@@ -112,13 +122,13 @@ with MongoClient() as client:
 
     nextCandidates = getNextCandidates(db, initialCandidates)
 
-    finalCandidates = []
+    # finalCandidates = []
     while len(nextCandidates) > 0:
         print "Running with %d possible candidates." % len(nextCandidates)
         nextCandidates = getNextCandidates(db, nextCandidates)
 
-        if len(nextCandidates) > 0:
-            finalCandidates = nextCandidates
+    #     if len(nextCandidates) > 0:
+    #         finalCandidates = nextCandidates
 
-    print finalCandidates
+    # print finalCandidates
     print totalResults
