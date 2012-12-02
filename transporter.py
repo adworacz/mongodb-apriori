@@ -18,9 +18,11 @@ with MongoClient() as client:
     # Lazy create a database in mongo called 'brovine-testdb'.
     db = client['brovine-testdb']
 
-    # Create a collection (aka. table) in the brovine db called 'genes'.
-    for genebucket in documents:
-        print "Inserting %s into 'genes' collection." % genebucket['geneid']
-
-        # PyMongo does lazy collection creation, so genes collection is created on first insert.
-        db.genes.insert(genebucket)
+    for i in range(10):
+        # Create a collection (aka. table) in the brovine db called 'genes'.
+        for index, genebucket in enumerate(documents):
+            # print "Inserting %s into 'genes' collection." % genebucket['geneid']
+            # print index, i
+            genebucket["_id"] = index + i * 1000
+            # PyMongo does lazy collection creation, so genes collection is created on first insert.
+            db.genes.insert(genebucket)
